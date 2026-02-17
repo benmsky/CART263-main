@@ -1,0 +1,269 @@
+body{
+    background:rgb(52, 52, 52);
+    margin:0;
+    padding:0;
+    color:white;
+    opacity: .85;
+    font-family: 'Roboto', sans-serif;
+    
+  }
+
+  main{
+    margin:0;
+    width:100%;
+  }
+
+  header{
+    margin: 0 auto;
+    margin-top:20px;
+    color:rgba(246, 15, 142,1.0);
+    /* color:#cdcaca; */
+    text-align: center;
+    width:90%;
+    padding:0;
+    background:rgb(52, 52, 52);
+    font-size:18px;
+ 
+  }
+  .flex-box{
+    margin:0 auto;
+    margin-top:20px;
+    width:90%;
+    display:flex;
+    /* background:green; */
+    flex-wrap:wrap;
+    justify-content: center;
+  }
+
+  .teamCanvas{
+    background:black;
+    width:400px;
+    height:500px;
+    margin:5px;
+    position:relative;
+  }
+  .teamCanvas p{
+    color:white;
+    padding:0;
+    margin:0;
+    text-align: center;
+    margin-top:10px;
+    margin-bottom: 10px;
+    width:20%;
+    font-size: 18px;
+    text-align:center;
+    border:2px;
+    border-style:solid;
+    border-color:black;
+  }
+
+  .teamCanvas p:hover{
+    border:2px;
+    background:white;
+    border-style:solid;
+    border-color: rgba(246, 15, 142,1.0);
+    background:white;
+    cursor: pointer;
+    color: rgba(246, 15, 142,1.0);
+  }
+
+  .team-nav{
+    justify-content:space-around;
+    display: flex;
+    width:375px;
+    margin:0 auto;
+
+  }
+
+
+
+  h5{
+    margin:0;
+    text-align:center;
+    margin-top:10px;
+    background: rgba(246, 15, 142,1.0);
+    padding:10px;
+    font-size: 18px;
+  }
+
+  .aniCanvas{
+    border:2px;
+    background:white;
+    border-style:solid;
+    border-color: rgba(246, 15, 142,1.0);
+    width:375px;
+    height:375px;
+    margin:0 auto;
+    position:relative;
+  }
+
+  .active-button{
+    color:white;
+    background:rgba(246, 15, 142,1.0);
+  }
+
+/*CSS TEAM H**/
+
+.TEAM_H_box{
+  width:max-content;
+  background-color: rgb(34, 29, 41);
+  position:absolute;
+  color:white;
+  margin:1px;
+  padding: 12px;
+}
+
+.TEAM_H_box:hover{
+  background-color: rgb(30, 168, 223);
+  cursor:pointer;
+
+}
+
+ /* #bubbleButton{
+    padding: 5px;
+    background-color:rgb(158, 153, 163);
+    width:max-content;
+    margin-left:1vw;
+    margin-top: 10px;
+    border-radius: 2px;
+    box-shadow: 2px 2px;
+ }
+
+.TEAM_E_bubble{
+  width:max-content;
+  background-color: rgb(30, 168, 223);
+  color:aliceblue;
+  padding: 12px 16px;
+  position: absolute;
+  top: 50%;
+  left:50%;
+  text-align: center;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+  font-family: 'Courier New', Courier, monospace;
+} */
+
+.TEAM_E_Image{
+  position: absolute;
+  width: 50px;
+  height: 50px;
+}
+
+.TEAM_E_box{
+  width:max-content;
+  background-color: rgb(15, 119, 246);
+  color:white;
+  padding: 12px 16px;
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100% - 20px);
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-sizing:border-box;
+  cursor:pointer;
+  font-family: "Georgia", "Times New Roman", serif;
+}
+
+.TEAM_E_circle {
+  border-radius: 10px;
+  background-color: rgb(241, 199, 72);
+  position: absolute;
+  transform: transform 0.8s ease;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.5);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ripple {
+  animation: ripple 0.3s ease;
+}
+
+.TEAM_E_circle {
+  border-radius: 10px;
+  background-color: rgb(241, 199, 72);
+  position: absolute;
+  transform: transform 0.8s ease;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.5);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.ripple {
+  animation: ripple 0.3s ease;
+}
+
+.TEAM_E_emoji {
+  user-select: none;
+  pointer-events: none;
+}
+.TEAM_E_box:hover{
+  background-color: rgb(255, 41, 155);
+}
+
+.TEAM_H_circle{
+  border-radius: 10px;;
+  background-color: rgb(223, 30, 117);
+  position:absolute;
+  transform: translate(-50%, -50%);
+
+}
+
+.TEAM_H_h_cell{
+  width:20px;
+  height:20px;
+  background-color: rgb(177, 150, 215);
+  position:absolute;
+  transform: translate(-50%, -50%);
+}
+
+.TEAM_H_h_cell:hover{
+ background-color: rgb(225, 217, 235);
+
+}
+
+.TEAM_H_h_word{
+  font-size:16px;
+  color:white;
+  /* position:absolute; */
+
+  background-color:rgba(228, 200, 208,.7);
+  display:inline-block;
+  margin:2px;
+  padding:2px;
+  border-style: dotted;
+  border-color: rgb(199, 97, 141);
+  border-width: 4px;
+
+
+}
+
+.TEAM_H_h_cell_D{
+  position:absolute;
+  border-radius:10px;
+  transform: translate(-50%, -50%);
+}
