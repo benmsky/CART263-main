@@ -1,11 +1,11 @@
-// ===== Canvas Setup =====
+// Canvas Setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// ===== Background =====
+// Background
 const bgParticles = [];
 for (let i = 0; i < 150; i++) {
   bgParticles.push({
@@ -29,15 +29,24 @@ function interpolateColor(c1, c2, f) {
 
 function drawBackground() {
   let waveFactor = Math.min(waveNumber / 10, 1);
-  const topColor = interpolateColor("#87CEEB", "#001f33", waveFactor);
-  const midColor = interpolateColor("#4ecdc4", "#005577", waveFactor);
-  const bottomColor = interpolateColor("#87CEEB", "#003366", waveFactor);
+  let darkFactor = darkTransition;
+  const topColor = interpolateColor("#87CEEB", "#001f33", waveFactor + darkFactor);
+  const midColor = interpolateColor("#4ecdc4", "#005577", waveFactor + darkFactor);
+  const bottomColor = interpolateColor("#87CEEB", "#003366", waveFactor + darkFactor);
   const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
   grad.addColorStop(0, topColor);
   grad.addColorStop(0.5, midColor);
   grad.addColorStop(1, bottomColor);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Overlay for darkness transition
+  if (darkTransition > 0) {
+    ctx.save();
+    ctx.globalAlpha = darkTransition;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+  }
 
   // Draw animated waves
   for (let i = 0; i < 3; i++) {
@@ -110,41 +119,41 @@ function drawBackground() {
     ctx.fill();
     ctx.restore();
   }
-  // ...existing code...
 }
 
-// ===== Player (Worm) =====
+// Player (Worm)
 let player = {
   x: canvas.width / 2,
   y: canvas.height / 2,
   color: "#ffcc00",
   segments: 10,
   segmentLength: 12,
-  wiggleOffset: 0
+  wiggleOffset: 0,
+  segmentPositions: [] // For following effect
 };
 
-// ===== Projectiles (Bubbles) =====
+// Projectiles (Bubbles)
 const projectiles = [];
 const shootSpeed = 5;
 let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
 
-// ===== Particles =====
+// Particles
 const particles = [];
 
-// ===== Game Stats =====
+// Game Stats
 let enemiesDestroyed = 0;
 let waveNumber = 1;
 
-// ===== Game State =====
+// Game State
 let isGameOver = false;
 let wavePaused = false;
 const wavePauseTime = 5000;
 let wavePauseStart = 0;
 
-// ===== Intro State =====
+// Intro State
 let showIntro = true;
 
-// ===== Intro Overlay =====
+// Intro Overlay
 function drawIntro() {
   ctx.fillStyle = 'rgba(0,0,0,0.7)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -166,11 +175,11 @@ canvas.addEventListener('click', function introClick() {
   }
 });
 
-// ===== Mouse Tracking =====
+// Mouse Tracking
 canvas.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 canvas.addEventListener('click', () => { if (!isGameOver && !wavePaused) shootProjectile(); });
 
-// ===== Shoot Bubble =====
+// Shoot Bubble
 function shootProjectile() {
   const headX = player.x;
   const headY = player.y + Math.sin(player.wiggleOffset) * 10;
@@ -208,79 +217,162 @@ function shootProjectile() {
   }
 }
 
-// ===== Draw Worm + Hook =====
+// Draw Worm + Hook
 function drawPlayer() {
   player.color = document.getElementById("playerColor").value;
-  const headX = player.x;
-  const headY = player.y + Math.sin(player.wiggleOffset) * 10;
-  player.wiggleOffset += 0.1;
+  let headX = player.x;
+  let headY = player.y + Math.sin(player.wiggleOffset) * 10;
 
-  // Hook line
-  ctx.strokeStyle = "#999";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(player.x, 0);
-  ctx.lineTo(headX, headY - 5);
-  ctx.stroke();
+  // Update segment positions for following effect
+  if (!player.segmentPositions.length) {
+    // Initialize segment positions
+    for (let i = 0; i < player.segments; i++) {
+      player.segmentPositions.push({ x: headX, y: headY + i * player.segmentLength });
+    }
+  }
 
-  // Hook
-  ctx.fillStyle = "#666";
-  ctx.beginPath();
-  ctx.arc(headX, headY - 5, 5, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Worm segments - elongated ellipses for worm-like appearance
+  if (wormAtBottom) {
+    // Move worm with arrow keys
+    player.x += wormSwimDir.x * wormSwimSpeed;
+    player.y += wormSwimDir.y * wormSwimSpeed;
+    // Clamp to canvas (allow worm to swim up the y axis)
+    player.x = Math.max(20, Math.min(canvas.width - 20, player.x));
+    player.y = Math.max(20, Math.min(canvas.height - 20, player.y));
+    headX = player.x;
+    headY = player.y;
+    // Move head segment
+    player.segmentPositions[0] = { x: headX, y: headY };
+    // Move each segment to follow the previous
+    for (let i = 1; i < player.segments; i++) {
+      let prev = player.segmentPositions[i - 1];
+      let curr = player.segmentPositions[i];
+      let dx = prev.x - curr.x;
+      let dy = prev.y - curr.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      let targetDist = player.segmentLength;
+      if (dist > 0) {
+        let moveX = dx * 0.2;
+        let moveY = dy * 0.2;
+        curr.x += moveX;
+        curr.y += moveY;
+        // Add wiggle when moving
+        curr.x += Math.sin(performance.now() / 120 + i * 0.5) * 2 * (wormSwimDir.x !== 0 ? 1 : 0);
+        curr.y += Math.cos(performance.now() / 120 + i * 0.5) * 2 * (wormSwimDir.y !== 0 ? 1 : 0);
+      }
+      // Clamp segment to canvas (allow segments to follow past y axis)
+      curr.x = Math.max(20, Math.min(canvas.width - 20, curr.x));
+      curr.y = Math.max(20, Math.min(canvas.height - 20, curr.y));
+      player.segmentPositions[i] = curr;
+    }
+  } else if (wormJumpTriggered && !wormAtBottom) {
+    let elapsed = performance.now() - wormJumpStart;
+    wormJumpProgress = Math.min(elapsed / wormJumpDuration, 1);
+    darkTransition = Math.min(wormJumpProgress * 1.2, 1);
+    headY = player.y + (wormSinkY - player.y) * wormJumpProgress;
+    ctx.save();
+    ctx.strokeStyle = `rgba(153,153,153,${1 - wormJumpProgress})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(player.x, 0);
+    ctx.lineTo(headX, headY - 5);
+    ctx.stroke();
+    ctx.restore();
+    // Animate segments falling
+    for (let i = 0; i < player.segments; i++) {
+      player.segmentPositions[i] = {
+        x: headX,
+        y: headY + i * player.segmentLength
+      };
+    }
+    if (wormJumpProgress >= 1) {
+      headY = wormSinkY;
+      wormAtBottom = true;
+      player.y = wormSinkY;
+      ctx.save();
+      ctx.globalAlpha = 1;
+      ctx.font = '32px sans-serif';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.fillText('The worm can now swim!', canvas.width / 2, canvas.height / 2);
+      ctx.restore();
+    }
+  } else {
+    player.wiggleOffset += 0.1;
+    headX = player.x;
+    headY = player.y + Math.sin(player.wiggleOffset) * 10;
+    player.segmentPositions[0] = { x: headX, y: headY };
+    for (let i = 1; i < player.segments; i++) {
+      let prev = player.segmentPositions[i - 1];
+      let curr = player.segmentPositions[i];
+      let dx = prev.x - curr.x;
+      let dy = prev.y - curr.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      let targetDist = player.segmentLength;
+      if (dist > 0) {
+        let moveX = dx * 0.2;
+        let moveY = dy * 0.2;
+        curr.x += moveX;
+        curr.y += moveY;
+        // Idle wiggle
+        curr.x += Math.sin(player.wiggleOffset + i * 0.5) * 2;
+      }
+      curr.x = Math.max(20, Math.min(canvas.width - 20, curr.x));
+      curr.y = Math.max(0, Math.min(canvas.height - 20, curr.y));
+      player.segmentPositions[i] = curr;
+    }
+    // Hook line
+    ctx.strokeStyle = "#999";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(player.x, 0);
+    ctx.lineTo(headX, headY - 5);
+    ctx.stroke();
+    ctx.fillStyle = "#666";
+    ctx.beginPath();
+    ctx.arc(headX, headY - 5, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Draw worm segments
   for (let i = 0; i < player.segments; i++) {
-    const x = headX + Math.sin(player.wiggleOffset + i * 0.5) * 5;
-    const y = headY + i * player.segmentLength;
-
-    // Draw segment as an ellipse (elongated vertically)
+    const x = player.segmentPositions[i].x;
+    const y = player.segmentPositions[i].y;
     ctx.fillStyle = player.color;
     ctx.beginPath();
-    ctx.ellipse(x, y, 4, 8, 0, 0, Math.PI * 2); // Width 4, height 8
+    ctx.ellipse(x, y, 4, 8, 0, 0, Math.PI * 2);
     ctx.fill();
-
-    // Add darker outline for definition
     ctx.strokeStyle = 'rgba(0,0,0,0.3)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.ellipse(x, y, 4, 8, 0, 0, Math.PI * 2);
     ctx.stroke();
   }
-
   // Draw worm head (larger ellipse)
   ctx.fillStyle = player.color;
   ctx.beginPath();
-  ctx.ellipse(headX, headY, 5, 10, 0, 0, Math.PI * 2); // Slightly larger ellipse
+  ctx.ellipse(player.segmentPositions[0].x, player.segmentPositions[0].y, 5, 10, 0, 0, Math.PI * 2);
   ctx.fill();
-
-  // Head outline
   ctx.strokeStyle = 'rgba(0,0,0,0.3)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.ellipse(headX, headY, 5, 10, 0, 0, Math.PI * 2);
+  ctx.ellipse(player.segmentPositions[0].x, player.segmentPositions[0].y, 5, 10, 0, 0, Math.PI * 2);
   ctx.stroke();
-
-  // Add eyes to head
   ctx.fillStyle = 'white';
   ctx.beginPath();
-  ctx.arc(headX - 2, headY - 4, 2, 0, Math.PI * 2);
+  ctx.arc(player.segmentPositions[0].x - 2, player.segmentPositions[0].y - 4, 2, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(headX + 2, headY - 4, 2, 0, Math.PI * 2);
+  ctx.arc(player.segmentPositions[0].x + 2, player.segmentPositions[0].y - 4, 2, 0, Math.PI * 2);
   ctx.fill();
-
-  // Pupils
   ctx.fillStyle = 'black';
   ctx.beginPath();
-  ctx.arc(headX - 2, headY - 4, 1, 0, Math.PI * 2);
+  ctx.arc(player.segmentPositions[0].x - 2, player.segmentPositions[0].y - 4, 1, 0, Math.PI * 2);
   ctx.fill();
   ctx.beginPath();
-  ctx.arc(headX + 2, headY - 4, 1, 0, Math.PI * 2);
+  ctx.arc(player.segmentPositions[0].x + 2, player.segmentPositions[0].y - 4, 1, 0, Math.PI * 2);
   ctx.fill();
 }
 
-// ===== Draw Projectiles =====
+// Draw Projectiles
 function drawProjectiles() {
   projectiles.forEach((p, i) => {
     ctx.save();
@@ -336,7 +428,7 @@ function drawProjectiles() {
   });
 }
 
-// ===== Draw Particles =====
+// Draw Particles
 function drawParticles() {
   particles.forEach((part, i) => {
     ctx.save(); ctx.globalAlpha = part.alpha;
@@ -349,15 +441,14 @@ function drawParticles() {
   });
 }
 
-// ===== Enemies (Fish) =====
+// Enemies (Fish)
 const enemies = [];
 let enemiesPerWave = 5;
 let enemyBaseSpeed = 0.8;
 const enemyColorInput = document.getElementById("enemyColor");
 const enemySpeedInput = document.getElementById("enemySpeed");
-const ENEMY_TYPES = ['smallFish', 'mediumFish', 'bigFish'];
-
-// ===== Spawn Enemy =====
+const ENEMY_TYPES = ['smallFish', 'mediumFish', 'bigFish']
+// Spawn Enemy
 function spawnEnemy() {
   const side = Math.floor(Math.random() * 4);
   let x, y;
@@ -381,7 +472,7 @@ function spawnEnemy() {
 // Initial wave
 for (let i = 0; i < enemiesPerWave; i++) spawnEnemy();
 
-// ===== Enemy Death Particles =====
+// Enemy Death Particles
 function spawnDeathParticles(enemy) {
   const x = enemy.x, y = enemy.y;
   const colors = { 'smallFish': '#66ff66', 'mediumFish': '#ff9966', 'bigFish': '#ff66ff' };
@@ -393,7 +484,7 @@ function spawnDeathParticles(enemy) {
   }
 }
 
-// ===== Draw Enemies & Collision =====
+// Draw Enemies & Collision
 function drawEnemies() {
   const deadEnemies = [];
   enemies.forEach(enemy => {
@@ -530,7 +621,7 @@ function drawEnemies() {
 
     ctx.restore();
 
-    // ===== COLLISION with small head hitbox =====
+    // COLLISION with small head hitbox
     const headHitRadius = 8;
     if (Math.hypot(targetX - enemy.x, targetY - enemy.y) < headHitRadius + enemy.radius) {
       isGameOver = true;
@@ -554,7 +645,7 @@ function drawEnemies() {
   });
 }
 
-// ===== Wave System =====
+// Wave System
 function checkWave() {
   if (enemies.length === 0 && !isGameOver && !wavePaused) {
     wavePaused = true; wavePauseStart = performance.now();
@@ -571,7 +662,7 @@ function checkWave() {
   }
 }
 
-// ===== Game Over =====
+// Game Over
 function drawGameOver() {
   ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.font = '48px sans-serif'; ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 50);
@@ -588,15 +679,10 @@ function handleRestartClick(e) {
     mouseY >= canvas.height / 2 + 80 && mouseY <= canvas.height / 2 + 130) { resetGame(); canvas.removeEventListener('click', handleRestartClick); }
 }
 function resetGame() {
-  enemies.length = 0; projectiles.length = 0; particles.length = 0; barrels.length = 0; seaMines.length = 0;
-  waveNumber = 1; enemiesPerWave = 5; enemyBaseSpeed = 0.8; enemiesDestroyed = 0;
-  isGameOver = false; wavePaused = false;
-  lastBarrelSpawn = performance.now();
-  lastMineSpawn = performance.now();
-  for (let i = 0; i < enemiesPerWave; i++) spawnEnemy();
+  window.location.reload();
 }
 
-// ===== Barrels =====
+// Barrels
 const barrels = [];
 let lastBarrelSpawn = performance.now();
 
@@ -685,7 +771,7 @@ function explodeBarrel(barrel) {
   if (idx > -1) barrels.splice(idx, 1);
 }
 
-// ===== Sea Mines =====
+// Sea Mines
 const seaMines = [];
 let lastMineSpawn = performance.now();
 
@@ -773,20 +859,68 @@ function explodeMine(mine) {
   if (idx > -1) seaMines.splice(idx, 1);
 }
 
-// ===== Update Game Loop =====
+// Worm Jump Sequence State
+let wormSequence = '';
+let wormJumpTriggered = false;
+let wormJumpProgress = 0; // 0 to 1 for animation
+let wormJumpStart = 0;
+let wormJumpDuration = 2000; // ms for transition
+let wormSinkY = null;
+let darkTransition = 0; // 0 to 1
+let wormAtBottom = false;
+let wormSwimSpeed = 2.5;
+let wormSwimDir = { x: 0, y: 0 };
+
+// Listen for key sequence
+window.addEventListener('keydown', function (e) {
+  if (wormJumpTriggered || isGameOver) return;
+  const key = e.key.toLowerCase();
+  if ('worm'.includes(key)) {
+    wormSequence += key;
+    if (wormSequence.length > 4) wormSequence = wormSequence.slice(-4);
+    if (wormSequence === 'worm') {
+      wormJumpTriggered = true;
+      wormJumpStart = performance.now();
+      wormSinkY = canvas.height - 40;
+    }
+  } else {
+    wormSequence = '';
+  }
+});
+
+// Listen for arrow keys when worm is at bottom
+window.addEventListener('keydown', function (e) {
+  if (!wormAtBottom) return;
+  if (e.key === 'ArrowLeft') wormSwimDir.x = -1;
+  if (e.key === 'ArrowRight') wormSwimDir.x = 1;
+  if (e.key === 'ArrowUp') wormSwimDir.y = -1;
+  if (e.key === 'ArrowDown') wormSwimDir.y = 1;
+});
+window.addEventListener('keyup', function (e) {
+  if (!wormAtBottom) return;
+  if (e.key === 'ArrowLeft' && wormSwimDir.x === -1) wormSwimDir.x = 0;
+  if (e.key === 'ArrowRight' && wormSwimDir.x === 1) wormSwimDir.x = 0;
+  if (e.key === 'ArrowUp' && wormSwimDir.y === -1) wormSwimDir.y = 0;
+  if (e.key === 'ArrowDown' && wormSwimDir.y === 1) wormSwimDir.y = 0;
+});
+
+// Update Game Loop
 function gameLoop() {
   drawBackground();
   if (showIntro) {
     drawIntro();
   } else if (!isGameOver) {
-    drawPlayer(); drawProjectiles(); drawParticles();
-    checkBarrelSpawn(); drawBarrels();
-    checkMineSpawn(); drawSeaMines();
-    if (!wavePaused) drawEnemies();
-    checkWave();
+    drawPlayer();
+    if (!wormJumpTriggered || wormAtBottom) {
+      drawProjectiles(); drawParticles();
+      checkBarrelSpawn(); drawBarrels();
+      checkMineSpawn(); drawSeaMines();
+      if (!wavePaused) drawEnemies();
+      checkWave();
+    }
   } else {
     drawGameOver();
   }
   requestAnimationFrame(gameLoop);
 }
-gameLoop();
+gameLoop(); op();
