@@ -1,0 +1,36 @@
+- A project
+- Interactive
+- A lot of elements
+- Elements interacting
+- Expandable?
+- Sound?
+- System?
+- Not game
+- Mouse over?
+- Study into mouse over?
+- Collecting/touching?
+- Gradients?
+- Life?
+- What systems in life;
+    - Flocks
+    - Flock dynamics
+    - Ecosystems
+    - Tropic systems
+- Ecosystems
+    - River
+    - Forest
+    - Underground
+- Each click makes it more complex?
+    - sound component
+        - layering of sound?
+    - serendipity
+    - fish follows mouse;
+        - hand that holds food?
+        - wiggle
+        - speeds up
+    - bunch of fish
+        - flock dynamic, lose control
+
+- Add sound
+- Add touch?
+- Add some ML algorithm from Nature of Code?
