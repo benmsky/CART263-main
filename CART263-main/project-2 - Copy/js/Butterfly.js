@@ -27,10 +27,13 @@ export class Butterfly {
         this.wing2.position.set(-0.5, 0, 0);
         this.butterfly = new THREE.Group();
         this.butterfly.add(this.body, this.wing1, this.wing2);
+            this.butterfly.castShadow = true;
+            this.butterfly.receiveShadow = true;
         this.butterfly.scale.set(size, size, size);
-        this.butterfly.position.copy(this.position);
-        this.butterfly.castShadow = true;
-        this.butterfly.receiveShadow = true;w
+        this.butterfly.position.x = this.position.x;
+        this.butterfly.position.y = this.position.y;
+        this.butterfly.position.z = this.position.z;
+
         this.scene.add(this.butterfly);
     }
     
@@ -41,11 +44,13 @@ export class Butterfly {
     update(delta) {
         this.velocity.add(this.acceleration);
         this.velocity.clampLength(0, this.topSpeed);
-        this.position.add(this.velocity.clone().multiplyScalar(delta));
-        this.butterfly.position.copy(this.position);
-        this.angleY = Math.atan2(this.velocity.x, this.velocity.z);
+        this.position.add(this.velocity * delta);
+        // this.butterfly.position.x = this.position.x
+        // this.butterfly.position.y = this.position.y
+        // this.butterfly.position.z = this.position.z
+        this.angleY = Math.atan2(this.velocity.x, this.velocity.y);
         this.butterfly.rotation.x = 0;
-        this.butterfly.rotation.y = this.angleY;
+        // this.butterfly.rotation.y = Math.PI/2 + this.angleY;
         this.butterfly.rotation.z = 0;
         this.acceleration.multiplyScalar(0);
 
@@ -53,49 +58,6 @@ export class Butterfly {
         this.wing1.rotation.z = Math.sin(Date.now() * 0.01) * 0.5;
         this.wing2.rotation.z = -Math.sin(Date.now() * 0.01) * 0.5;
     }
-
-    // checkEdges() {
-    //     /* 
-    //     * "Stay Within Walls" Steering Behaviour adapted from The Nature of Code, chapter 5, example 5.3
-    //     * https://editor.p5js.org/natureofcode/sketches/fGNwVP3h7
-    //     */ 
-    //     let dir = null;
-
-    //     // Steer off left edge and right edge
-    //     if (this.position.x <= -100) {
-    //         // this.velocity.x = this.velocity.x * -1; // flips to positive so the fish goes right now
-    //         dir = new THREE.Vector3(this.topSpeed, this.velocity.y, this.velocity.z)
-        
-    //     } else if (this.position.x >= 100) {
-    //         // this.velocity.x *= -1; // flips to negative so the fish goes left now
-    //         dir = new THREE.Vector3(-this.topSpeed, this.velocity.y, this.velocity.z)
-    //     }
-
-    //     // Steer off bottom edge and steer off top edge
-    //     if (this.position.y <= -100) {
-    //         // the fish goes up now
-    //         dir = new THREE.Vector3(this.velocity.x, this.topSpeed, this.velocity.z)
-    //     } else if (this.position.y >= 100) {
-    //         dir = new THREE.Vector3(this.velocity.x, -this.topSpeed, this.velocity.z)
-    //     }
-
-    //     // Steer off front end and back end
-    //     if (this.position.z <= -100) {
-    //         // the fish comes back now
-    //         dir = new THREE.Vector3(this.velocity.x, this.velocity.y, this.topSpeed)
-    //     } else if (this.position.z >= 100) {
-    //         // the fish goes away
-    //         dir = new THREE.Vector3(this.velocity.x, this.velocity.y, -this.topSpeed)
-    //     }
-
-    //     if (dir !== null) {
-    //         dir.setLength(this.topSpeed);
-    //         let steer = new THREE.Vector3();
-    //         steer.subVectors(dir, this.velocity);
-    //         steer.clampLength(0, this.maxForce);
-    //         this.applyForce(steer);
-    //     }
-    // }
 
     /*
     * Adapted from The Nature of Code, chapter 2, example 2.1 "Forces"
@@ -127,12 +89,12 @@ export class Butterfly {
     /*
     * "Separate" behaviour adapted from The Nature of Code, chapter 5, "Complex Systems"
     */
-    separate(school) {
+    separate(swarm) {
         // This variable specifies how close is too close.
         let desiredSeparation = 5;
         let sum = new THREE.Vector3(0,0,0);
         let count = 0;
-        for (let other of school) {
+        for (let other of swarm) {
             //{!1 .offset} What is the distance between this vehicle and the other vehicle?
             let d = this.position.distanceTo(other.position);
             if (this !== other && d < desiredSeparation) {
