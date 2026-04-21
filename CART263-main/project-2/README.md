@@ -5,6 +5,8 @@ by Philippe Beauchemin and Ben Macknofsky, 2026
 
 [View the ARTIST STATEMENT PDF](https://drive.google.com/file/d/1xJgQu7ASHkbGmzTKUiqNlCXYfmoJV2Il/view?usp=sharing)
 
+[View the VIDEO](https://youtu.be/2d0URWZfoEA?si=zAbF_dO1B5jHdrEL)
+
 ### Attributions
 - Made with the Three.js library, MIT License https://threejs.org/
 - "Remixed" examples from Three.js examples
