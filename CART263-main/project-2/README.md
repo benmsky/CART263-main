@@ -3,7 +3,7 @@ by Philippe Beauchemin and Ben Macknofsky, 2026
 
 [View the project](https://benmsky.github.io/CART263-main/CART263-main/project-2/)
 
-[View the project](https://drive.google.com/file/d/1xJgQu7ASHkbGmzTKUiqNlCXYfmoJV2Il/view?usp=sharing)
+[View the ARTIST STATEMENT PDF](https://drive.google.com/file/d/1xJgQu7ASHkbGmzTKUiqNlCXYfmoJV2Il/view?usp=sharing)
 
 ### Attributions
 - Made with the Three.js library, MIT License https://threejs.org/
